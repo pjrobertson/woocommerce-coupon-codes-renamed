@@ -12,7 +12,6 @@
  */
 
 add_filter( 'gettext', 'woocommerce_rename_coupon_field_on_cart', 10, 3 );
-add_filter( 'gettext', 'woocommerce_rename_coupon_field_on_cart', 10, 3 );
 add_filter('woocommerce_coupon_error', 'rename_coupon_label', 10, 3);
 add_filter('woocommerce_coupon_message', 'rename_coupon_label', 10, 3);
 add_filter('woocommerce_cart_totals_coupon_label', 'rename_coupon_label',10, 1);
@@ -21,32 +20,33 @@ add_filter( 'woocommerce_checkout_coupon_message', 'woocommerce_rename_coupon_me
 add_filter( 'woocommerce_get_sections_advanced', 'coupon_code_add_section' );
 add_filter( 'woocommerce_get_settings_advanced', 'coupon_code_all_settings', 10, 2 );
 
-
-function woocommerce_rename_coupon_field_on_cart( $translated_text, $text, $text_domain ) {
+// special helper function to load the coupon code text - we should only do this if there's an actual match in the code, not every time
+// slight performance boost
+function translate_text($before, $after, $lowercase=false){
 
 	$code_text  = get_option( 'coupon_code_text' );
+	return $before . ($lowercase ? strtolower($code_text) : $code_text) . $after;
+}
+
+function woocommerce_rename_coupon_field_on_cart( $translated_text, $text, $text_domain ) {
 
 	// bail if not modifying frontend woocommerce text
 	if ( is_admin() || 'woocommerce' !== $text_domain) {
 		return $translated_text;
 	}
-	if ( 'Coupon:' === $text && $code_text) {
-		$translated_text =  $code_text . ':';
-	}
 
-	if ('Coupon has been removed.' === $text && $code_text){
-		$translated_text = $code_text . ' has been removed.';
-	}
-
-	if ( 'Apply coupon' === $text && $code_text) {
+	if ( 'Coupon:' === $text) {
+		$translated_text =  translate_text('', ':');
+	} else if ('Coupon has been removed.' === $text){
+		$translated_text = translate_text('', ' has been removed.';
+	} else if ( 'Apply coupon' === $text) {
 		$translated_text = 'Apply Code';
+	} else if ( 'Coupon code' === $text) {
+		$translated_text = translate_text('', '');
+	} else if ( 'Please enter a coupon code.' === $text) {
+		$translated_text = translate_text('Please enter a ', ' code.', true);
 	}
-
-	if ( 'Coupon code' === $text && $code_text) {
-		$translated_text = $code_text;
-	
-	} 
-
+  
 	return $translated_text;
 }
 
@@ -54,13 +54,11 @@ function woocommerce_rename_coupon_field_on_cart( $translated_text, $text, $text
 // rename the "Have a Coupon?" message on the checkout page
 function woocommerce_rename_coupon_message_on_checkout($message) {
 
-
 	$code_text  = get_option( 'coupon_code_text' );
-	$vowels = array('a','e','i','o','u');
 
 	if($code_text){
-
-		if(in_array($code_text[0], $vowels)){
+		$vowels = array('a','e','i','o','u');
+		if(in_array(strtolower($code_text[0]), $vowels)){
 			$question = 'Have an ';
 		} else{
 			$question = 'Have a ';
@@ -83,9 +81,9 @@ function rename_coupon_label($err, $err_code=null, $something=null){
 	$code_text  = get_option( 'coupon_code_text' );
 
 	if(strpos($err, 'Coupon code') !== false) {
-		$err = str_ireplace("Coupon code",$code_text,$err);
+		$err = str_ireplace("Coupon code", $code_text, $err);
 	} elseif(strpos($err, 'Coupon') !== false){
-		$err = str_ireplace("Coupon",$code_text,$err);
+		$err = str_ireplace("Coupon", $code_text, $err);
 	}
 
 	return $err;
