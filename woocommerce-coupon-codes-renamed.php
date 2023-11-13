@@ -38,7 +38,7 @@ function woocommerce_rename_coupon_field_on_cart( $translated_text, $text, $text
 	if ( 'Coupon:' === $text) {
 		$translated_text =  translate_text('', ':');
 	} else if ('Coupon has been removed.' === $text){
-		$translated_text = translate_text('', ' has been removed.';
+		$translated_text = translate_text('', ' has been removed.');
 	} else if ( 'Apply coupon' === $text) {
 		$translated_text = 'Apply Code';
 	} else if ( 'Coupon code' === $text) {
